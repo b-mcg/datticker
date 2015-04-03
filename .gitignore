@@ -1,0 +1,9 @@
+target/
+.idea
+.idea_modules
+project/project/
+project/target/
+gen/
+local.properties
+debug.properties
+release.properties
