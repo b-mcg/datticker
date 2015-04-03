@@ -1,0 +1,91 @@
+package com.example.datticker
+
+// Android Imports
+import android.os.Bundle
+import android.widget.{LinearLayout, RelativeLayout, TextView, Button}
+import android.view.ViewGroup.LayoutParams._
+import android.view.{Gravity, View}
+import android.app.Activity
+import android.graphics.Color
+
+// Import Macroid Stuff
+import macroid._
+import macroid.FullDsl._
+import macroid.contrib._
+import macroid.contrib.Layouts.RuleRelativeLayout
+import macroid.contrib.Layouts.RuleRelativeLayout.Rule
+import macroid.{Tweak}
+
+//import com.fortysevendeg.macroid.extras.LinearLayoutTweaks.{llLayoutGravity => llg}
+
+// Scala Imports
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
+// Local Imports
+import jsonExtraction.CryptoCoin.{getBitcoinData, futureTickerData, extractParts}
+import Tweaks.DTT._
+
+// mix in Contexts for Activity
+class MainActivity extends Activity with Contexts[Activity] {
+
+  // prepare a variable to hold our text view
+  var cap      = slot[TextView]
+  lazy val fat = size(22)
+
+  override def onCreate(savedInstanceState: Bundle) = {
+    super.onCreate(savedInstanceState)
+
+    //lazy val btcData = futureTickerData()
+    lazy val btcData = extractParts()
+
+    // this will be a linear layout
+    val view = l[LinearLayout](
+
+      
+      w[TextView] <~
+        TextTweaks.color(Color.rgb(0, 0, 0)) <~
+        text("BTC|USD"),
+
+      l[LinearLayout](
+
+        // a text view
+        w[TextView] <~
+          TextTweaks.color(Color.rgb(0, 0, 0)) <~
+          (btcData._1).map(text) <~
+          fat <~
+          tvG(Gravity.CENTER_HORIZONTAL) <~
+          // assign to cap
+          wire(cap)
+
+      ) <~ llG(Gravity.CENTER) <~
+          vertical <~
+          lp[LinearLayout](MATCH_PARENT, 0, 0.80f),
+      // a button
+      w[Button] <~
+        // set text
+        text("Refresh") <~
+        BgTweaks.color(Color.rgb(255, 215, 0)) <~
+        // set layout params (LinearLayout.LayoutParams will be used)
+        // set click handler
+        On.click {
+
+          cap <~ futureTickerData().map(text) <~ fat
+        } <~ btW(145 dp) <~
+          btG(Gravity.CENTER_HORIZONTAL | Gravity.CENTER)
+    ) <~ BgTweaks.color(Color.rgb(224, 255, 255)) <~
+      vertical <~
+      llWS(1) <~
+      llG(Gravity.CENTER_HORIZONTAL) <~
+      lp[LinearLayout](MATCH_PARENT, MATCH_PARENT)
+
+      // match layout orientation to screen orientation
+      /*(portrait ? vertical | horizontal) <~ Transformer {
+
+        // here we set a padding of 4 dp for all inner views
+        case x: View ⇒ x <~ padding(all = 4 dp)
+      } <~ vertical <~ lp[LinearLayout](MATCH_PARENT, MATCH_PARENT)*/
+
+    setContentView(getUi(view))
+  }
+}
